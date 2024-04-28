@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
 import { UserService } from '../services/UserService'
+import {validateEmail} from "../utils/validateEmail";
+
 
 export class UserController {
     userService: UserService
@@ -17,6 +19,10 @@ export class UserController {
             return response.status(400).json({ message: 'Bad request! Name obrigatório'})
         }
 
+        if(!validateEmail({ email : user.email})){
+            return response.status(400).json({ message: 'Bad request! E-mail inválido'})
+        }
+
         this.userService.createUser(user.name, user.email)
         return response.status(201).json({ message: 'Usuário criado'})
     }
@@ -24,5 +30,21 @@ export class UserController {
     getAllUsers = (request: Request, response: Response) => {
         const users = this.userService.getAllUsers()
         return response.status(200).json( users )
-    } 
+    }
+
+    getUser = (request: Request, response: Response) => {
+        const { name } = request.params
+        const user = this.userService.getUser(name)
+        if(!user){
+            return response.status(404).json({ message: 'Usuário não encontrado'})
+        }
+        return response.status(200).json( user )
+    }
+
+    deleteUser = (request: Request, response: Response) => {
+        const {name} = request.body
+
+        this.userService.deleteUser(name)
+        return response.status(200).json({message: 'Usuário deletado'})
+    }
 }
